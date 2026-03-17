@@ -1,6 +1,6 @@
 # MEGqc_ANCPLabOldenburg_CBRAIN_Container
 
-The following Git project is purely descriptive, it only provides containarization guidelines for CBRAIN containarization of MEGqc tools (e.g image definition)
+The following Git project is purely descriptive, it only provides guidelines for CBRAIN containerization of MEGqc tools (e.g image definition)
 
 CBRAIN is a web-enabled distributed computing platform that facilitates collaborative research on large, distributed data by creating an easy-to-use interface for users (or groups of collaborating users) to access high-performance computing (HPC) and Cloud Computing resources.
 https://cbrain.ca/
