@@ -9,8 +9,9 @@ MEGqc is an open-source, BIDS-aligned toolbox for automated MEG quality assessme
 It is designed for large cohorts and reproducible workflows, and provides both: 
 interactive HTML reports for human inspection, and machine-readable derivatives for downstream automation. 
 
-It is developed by the Applied Neurocognitive Psychology Lab University Oldenburg 
-Please source to https://github.com/ANCPLabOldenburg
+It is developed by the Applied Neurocognitive Psychology Lab University Oldenburg.
+
+Please follow the link for more information: https://github.com/ANCPLabOldenburg
 
 Related repositories:
 https://github.com/ANCPLabOldenburg/MEGqc
