@@ -360,10 +360,11 @@ apptainer exec \
 
 ```bash
 apptainer exec \
-  --env DISPLAY=:0 \
+  --env DISPLAY=$DISPLAY \
   --env QT_QPA_PLATFORM=xcb \
-  --env XDG_RUNTIME_DIR=/run/user/$(id -u) \
-  --env DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus" \
+  --env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \
+  --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+  --env XAUTHORITY=$XAUTHORITY \
   --bind /tmp/.X11-unix:/tmp/.X11-unix \
   --bind /etc/machine-id:/etc/machine-id:ro \
   --bind /run/user/$(id -u):/run/user/$(id -u) \
@@ -374,6 +375,12 @@ apptainer exec \
 > The GUI is **not available on headless HPC nodes**. The container defaults
 > to `QT_QPA_PLATFORM=offscreen` for HPC safety; the GUI command above
 > overrides that only for the GUI invocation.
+>
+> **Why shell variables instead of hard-coded values?**  
+> On multi-user servers `$DISPLAY` is rarely `:0` (e.g. `:130.0`), and the
+> D-Bus socket may live under `/tmp/` rather than `/run/user/<uid>/bus`.
+> Using `$DISPLAY`, `$DBUS_SESSION_BUS_ADDRESS`, and `$XAUTHORITY` directly
+> makes the command work correctly on both local desktops and shared servers.
 
 ---
 
