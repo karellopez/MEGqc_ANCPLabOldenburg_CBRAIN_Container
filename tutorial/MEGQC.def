@@ -80,10 +80,9 @@ From: continuumio/miniconda3
     # ── Headless rendering — NO display server required ──────────────────────
     # DEFAULT: offscreen — safe for every HPC / CBRAIN node with no display.
     #
-    # To launch the GUI on a desktop use the provided wrapper script:
-    #   ./launch_gui.sh [/path/to/MEGqc.sif]
-    #
-    # --containall is intentionally NOT used in the GUI script because the
+    # To launch the GUI on a desktop, see the GUI command in %help below
+    # or in TUTORIAL_Testing_and_CLI_Reference.md (section 13).
+    # --containall is intentionally NOT used for GUI invocations because the
     # GUI needs --bind $HOME:$HOME to browse datasets on the host filesystem.
     # Python isolation is still guaranteed by the hardcoded shebang
     # #!/opt/conda/bin/python3.10 — host packages are never picked up.
@@ -152,9 +151,9 @@ From: continuumio/miniconda3
     -----------------------
     apptainer exec \
       --containall \
-      --bind /path/to/output:/mnt_out \
+      --bind /path/to/config:/mnt_config \
       MEGqc.sif \
-      get-megqc-config --target_directory /mnt_out
+      get-megqc-config --target_directory /mnt_config
 
     Launch GUI (desktop only — requires a display)
     -----------------------------------------------

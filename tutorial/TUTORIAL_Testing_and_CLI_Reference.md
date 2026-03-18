@@ -298,7 +298,9 @@ apptainer exec \
 | `--all` | Everything | All QA + all QC |
 
 > Add `--run-all` to `run-megqc` to invoke plotting immediately after
-> calculation finishes (equivalent to calling `run-megqc-plotting --all`).
+> calculation finishes. The scope of reports generated is determined by the
+> pairing flag: e.g. `--run-all --all` = all reports, `--run-all --qa-subject`
+> = subject reports only. Without a pairing flag, `--run-all` alone has no effect.
 
 ---
 
