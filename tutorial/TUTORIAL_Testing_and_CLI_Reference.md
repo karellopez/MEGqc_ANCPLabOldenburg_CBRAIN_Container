@@ -26,6 +26,7 @@
 
 ```bash
 apptainer exec \
+  --containall \
   --bind "$PWD":/mnt_config \
   MEGqc.sif \
   get-megqc-config --target_directory /mnt_config
@@ -50,6 +51,7 @@ shot, results stored in a timestamped profile under `outputs/`.
 mkdir -p outputs
 
 apptainer run \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
   --bind "$PWD/outputs":/mnt_OUT \
@@ -72,6 +74,7 @@ Fastest way to verify the container works on your data:
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
   --bind "$PWD/outputs":/mnt_OUT \
@@ -93,6 +96,7 @@ which is much faster and sufficient for a smoke test.
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
   --bind "$PWD/outputs":/mnt_OUT \
@@ -111,6 +115,7 @@ apptainer run \
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
   --bind "$PWD/outputs":/mnt_OUT \
@@ -131,6 +136,7 @@ apptainer run \
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/ds_1:/mnt_ds1 \
   --bind /path/to/ds_camcan:/mnt_ds2 \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
@@ -149,6 +155,7 @@ apptainer run \
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/ds_1:/mnt_ds1 \
   --bind /path/to/ds_camcan:/mnt_ds2 \
   --bind "$PWD/settings_ds1.ini":/mnt_cfg1/settings.ini \
@@ -174,14 +181,14 @@ apptainer run \
 | Mode | When to use |
 |------|-------------|
 | `new` | Default — creates a new timestamped profile |
-| `reuse` | Re-run plotting on an existing profile (needs `--analysis_id`) |
+| `reuse` | Re-run plotting on an existing profile (requires `--analysis_id`) |
 | `latest` | Auto-resolves the most recently modified profile |
-| `legacy` | Classic path (`derivatives/Meg_QC/`), no profile subfolder |
 
 ### Reuse an existing profile (add more plots)
 
 ```bash
 apptainer run \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/settings.ini":/mnt_config/settings.ini \
   --bind "$PWD/outputs":/mnt_OUT \
@@ -194,19 +201,6 @@ apptainer run \
   --run-all --all
 ```
 
-### Legacy mode (flat derivatives, no profile)
-
-```bash
-apptainer run \
-  --bind /path/to/bids_dataset:/mnt_IN \
-  --bind "$PWD/settings.ini":/mnt_config/settings.ini \
-  MEGqc.sif \
-  --inputdata /mnt_IN \
-  --config /mnt_config/settings.ini \
-  --analysis_mode legacy \
-  --run-all --all
-```
-
 ---
 
 ## 8. run-megqc-plotting — plotting only (no recalculation)
@@ -216,6 +210,7 @@ reports with different plot settings.
 
 ```bash
 apptainer exec \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/outputs":/mnt_OUT \
   MEGqc.sif \
@@ -230,6 +225,7 @@ apptainer exec \
 
 ```bash
 apptainer exec \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/outputs":/mnt_OUT \
   MEGqc.sif \
@@ -244,6 +240,7 @@ apptainer exec \
 
 ```bash
 apptainer exec \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/outputs":/mnt_OUT \
   MEGqc.sif \
@@ -258,6 +255,7 @@ apptainer exec \
 
 ```bash
 apptainer exec \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/outputs":/mnt_OUT \
   MEGqc.sif \
@@ -274,6 +272,7 @@ apptainer exec \
 
 ```bash
 apptainer exec \
+  --containall \
   --bind /path/to/bids_dataset:/mnt_IN \
   --bind "$PWD/outputs":/mnt_OUT \
   MEGqc.sif \
@@ -360,27 +359,26 @@ apptainer exec \
 
 ```bash
 apptainer exec \
-  --env DISPLAY=$DISPLAY \
   --env QT_QPA_PLATFORM=xcb \
-  --env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \
-  --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
-  --env XAUTHORITY=$XAUTHORITY \
   --bind /tmp/.X11-unix:/tmp/.X11-unix \
   --bind /etc/machine-id:/etc/machine-id:ro \
   --bind /run/user/$(id -u):/run/user/$(id -u) \
+  --bind "${XAUTHORITY:-$HOME/.Xauthority}":/tmp/.Xauthority:ro \
+  --bind "$HOME":"$HOME" \
   MEGqc.sif \
   megqc
 ```
 
-> The GUI is **not available on headless HPC nodes**. The container defaults
-> to `QT_QPA_PLATFORM=offscreen` for HPC safety; the GUI command above
-> overrides that only for the GUI invocation.
->
-> **Why shell variables instead of hard-coded values?**  
-> On multi-user servers `$DISPLAY` is rarely `:0` (e.g. `:130.0`), and the
-> D-Bus socket may live under `/tmp/` rather than `/run/user/<uid>/bus`.
-> Using `$DISPLAY`, `$DBUS_SESSION_BUS_ADDRESS`, and `$XAUTHORITY` directly
-> makes the command work correctly on both local desktops and shared servers.
+Only **one `--env` flag** is needed. Without `--containall`, Apptainer inherits
+the full host environment — `$DISPLAY`, `$XDG_RUNTIME_DIR`,
+`$DBUS_SESSION_BUS_ADDRESS` and `$XAUTHORITY` are all passed in automatically.
+
+`--containall` is **intentionally absent**: the GUI needs `--bind $HOME:$HOME`
+to browse datasets and output folders on the host filesystem. Python isolation
+is still guaranteed by the hardcoded shebang `#!/opt/conda/bin/python3.10`.
+
+> The GUI is **not available on headless HPC nodes**. All CLI commands in this
+> file use `--containall` for strict isolation. The GUI command does not.
 
 ---
 
@@ -403,6 +401,7 @@ OUT=/scratch/$USER/megqc_results
 mkdir -p "$OUT"
 
 apptainer run \
+  --containall \
   --bind "${BIDS}":/mnt_IN \
   --bind "${CONFIG}":/mnt_config/settings.ini \
   --bind "${OUT}":/mnt_OUT \

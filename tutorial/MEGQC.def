@@ -74,17 +74,27 @@ From: continuumio/miniconda3
     # Conda / Python on PATH
     export PATH="/opt/conda/bin:$PATH"
 
+    # Locale — ensures consistent behaviour across all systems (Alex Pastor-Bernier, MNI/McGill)
+    export LC_ALL=C
+
     # ── Headless rendering — NO display server required ──────────────────────
-    # This is the key fix for HPC / CBRAIN nodes where no X11/Wayland display
-    # is present.  Without these two variables the container crashes with:
+    # DEFAULT: offscreen — safe for every HPC / CBRAIN node with no display.
     #
-    #   PyQt6.QtWidgets ImportError: libEGL.so.1
-    #   qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
+    # To launch the GUI on a desktop use the provided wrapper script:
+    #   ./launch_gui.sh [/path/to/MEGqc.sif]
     #
-    # Setting offscreen mode tells Qt to render to memory instead of a screen.
-    # All HTML reports and plots are written to disk as normal.
+    # --containall is intentionally NOT used in the GUI script because the
+    # GUI needs --bind $HOME:$HOME to browse datasets on the host filesystem.
+    # Python isolation is still guaranteed by the hardcoded shebang
+    # #!/opt/conda/bin/python3.10 — host packages are never picked up.
+    #
+    # Note: QT_QPA_PLATFORM=xcb cannot be the baked-in default because CBRAIN
+    # and HPC nodes have no display — the container would crash on every
+    # headless run.  The offscreen default stays; the script overrides it
+    # only for explicit GUI invocations.
     export QT_QPA_PLATFORM=offscreen
     export MPLBACKEND=Agg
+
 
     # Python housekeeping
     export PYTHONDONTWRITEBYTECODE=1
@@ -102,59 +112,59 @@ From: continuumio/miniconda3
     Full analysis + all reports
     ---------------------------
     apptainer run \
+      --containall \
       --bind /path/to/bids:/mnt_IN \
       --bind /path/to/config:/mnt_config \
+      --bind /path/to/outputs:/mnt_OUT \
       MEGqc.sif \
       --inputdata /mnt_IN \
       --config /mnt_config/settings.ini \
+      --derivatives_output /mnt_OUT \
       --analysis_mode new --run-all --all
 
-    Calculation only
-    ----------------
+    Single subject
+    --------------
     apptainer run \
+      --containall \
       --bind /path/to/bids:/mnt_IN \
       --bind /path/to/config:/mnt_config \
+      --bind /path/to/outputs:/mnt_OUT \
       MEGqc.sif \
       --inputdata /mnt_IN \
       --config /mnt_config/settings.ini \
-      --analysis_mode new
-
-    Specific subjects
-    -----------------
-    apptainer run \
-      --bind /path/to/bids:/mnt_IN \
-      --bind /path/to/config:/mnt_config \
-      MEGqc.sif \
-      --inputdata /mnt_IN \
-      --config /mnt_config/settings.ini \
-      --subs 009 012 \
-      --analysis_mode new --run-all --all
+      --derivatives_output /mnt_OUT \
+      --subs 009 \
+      --analysis_mode new --run-all --qa-subject
 
     Plotting only (after calculation)
     ----------------------------------
     apptainer exec \
+      --containall \
       --bind /path/to/bids:/mnt_IN \
+      --bind /path/to/outputs:/mnt_OUT \
       MEGqc.sif \
-      run-megqc-plotting --inputdata /mnt_IN --all
-
-    GQI only
-    --------
-    apptainer exec \
-      --bind /path/to/bids:/mnt_IN \
-      --bind /path/to/config:/mnt_config \
-      MEGqc.sif \
-      globalqualityindex \
+      run-megqc-plotting \
       --inputdata /mnt_IN \
-      --config /mnt_config/settings.ini
+      --derivatives_output /mnt_OUT \
+      --analysis_mode latest --all
 
     Get default config file
     -----------------------
     apptainer exec \
+      --containall \
       --bind /path/to/output:/mnt_out \
       MEGqc.sif \
       get-megqc-config --target_directory /mnt_out
 
-    NOTE: The MEGqc graphical interface (GUI) is NOT available in this
-    container. All quality metrics and interactive HTML reports are produced
-    via the CLI commands above.
+    Launch GUI (desktop only — requires a display)
+    -----------------------------------------------
+    apptainer exec \
+      --env QT_QPA_PLATFORM=xcb \
+      --bind /tmp/.X11-unix:/tmp/.X11-unix \
+      --bind /etc/machine-id:/etc/machine-id:ro \
+      --bind /run/user/$(id -u):/run/user/$(id -u) \
+      --bind "${XAUTHORITY:-$HOME/.Xauthority}":/tmp/.Xauthority:ro \
+      --bind "$HOME":"$HOME" \
+      MEGqc.sif \
+      megqc
 
